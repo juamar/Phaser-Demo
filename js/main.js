@@ -15,7 +15,6 @@ var score = 0;
 var scoreText;
 var game = new Phaser.Game(800, 600, Phaser.AUTO, 'canvas', { preload: preload, create: create, update: update });
 var loadText;
-var mouseDown;
 
 function preload() {
     game.load.image('sky', 'assets/sky.png');
@@ -100,7 +99,7 @@ function create() {
     back = game.add.sprite(0, 0, 'sky');
     loadText = game.add.text(340, 300, 'Loading', { fontSize: '32px', fill: '#000' });
 
-    mouseDown = game.add.text(340, 10, 'false', { fontSize: '20px', fill: '#000' });
+    //mouseDown = game.add.text(340, 10, 'false', { fontSize: '20px', fill: '#000' });
 
     music = game.add.audio('jesus');
 
