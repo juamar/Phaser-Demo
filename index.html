@@ -16,19 +16,21 @@
 
 /**
 Nos falta:
-    *Poner música-
-    *acelerar música
-    *linea 111
-    *cambiar bounce de estrellas
-    *hacer que no parezca que estás en la luna, sino en la tierra... (salto del dude)
-    *Poner bichos malos
-    *Vidas
-    *Fin de nivel.
+    *Poner música-OK
+    *acelerar música-OK
+    *Agregar botones Touch-Ok
+    *Poner game en un canvas definido y un h1 a la página (para probar... no porque aporte algo)-
+    *linea 111-
+    *cambiar bounce de estrellas-
+    *Poner bichos malos-
+    *Vidas-
+    *Fin de nivel-
 **/
 var score = 0;
 var scoreText;
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 var loadText;
+var mouseDown;
 
 function preload() {
     game.load.image('sky', 'assets/sky.png');
@@ -113,6 +115,8 @@ function create() {
     back = game.add.sprite(0, 0, 'sky');
     loadText = game.add.text(340, 300, 'Loading', { fontSize: '32px', fill: '#000' });
 
+    mouseDown = game.add.text(340, 10, 'false', { fontSize: '20px', fill: '#000' });
+
     music = game.add.audio('jesus');
 
     game.sound.setDecodedCallback([music],start, this);
@@ -140,19 +144,24 @@ function update() {
     //  Reset the players velocity (movement)
     player.body.velocity.x = 0;
 
-    if (cursors.left.isDown)
+    mouseDown.text = game.input.mousePointer.isDown;
+
+    var isDown = game.input.activePointer.isDown;
+    var x = game.input.activePointer.x;
+    var y = game.input.activePointer.y;
+    var up = 200;
+    var left = 300;
+    var right = 600;
+
+    if (cursors.left.isDown || ( isDown && x < left ) )
     {
         //  Move to the left
-        player.body.velocity.x = -150;
-
-        player.animations.play('left');
+        moveLeft();
     }
-    else if (cursors.right.isDown)
+    else if (cursors.right.isDown || ( isDown && x > right ) )
     {
         //  Move to the right
-        player.body.velocity.x = 150;
-
-        player.animations.play('right');
+        moveRight();
     }
     else
     {
@@ -163,10 +172,29 @@ function update() {
     }
 
     //  Allow the player to jump if they are touching the ground.
-    if (cursors.up.isDown && player.body.touching.down && hitPlatform)
+    if ((cursors.up.isDown || (y < up  && isDown)) && player.body.touching.down && hitPlatform)
     {
-        player.body.velocity.y = -350;
+        jump();
     }
+}
+
+function moveLeft()
+{
+    player.body.velocity.x = -150;
+
+    player.animations.play('left');
+}
+
+function moveRight()
+{
+    player.body.velocity.x = 150;
+
+    player.animations.play('right');
+}
+
+function jump()
+{
+    player.body.velocity.y = -350;
 }
 
 function collectStar (player, star) {
