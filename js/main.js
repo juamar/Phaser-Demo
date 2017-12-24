@@ -9,6 +9,7 @@ Nos falta:
     *cambiar bounce de estrellas-Ok
     *Poner bichos malos-Ok
     *Vidas-
+    *Game Over! - Ok
     *Fin de nivel-
 **/
 var score = 0;
@@ -69,8 +70,20 @@ function start()
 
 function update() {
 
-    collitions();
+    if (player.life > 0)
+    {      
+        collitions();
+        play();
+    }
+    else
+    {
+        gameOver();
+    }
+    
+}
 
+function play()
+{
     cursors = game.input.keyboard.createCursorKeys();
 
     //  Reset the players velocity (movement)
@@ -146,7 +159,6 @@ function update() {
         enemies[2].body.velocity.x = -50;
         enemies[2].animations.play('left');
     }
-
 }
 
 function moveLeft()
@@ -210,7 +222,6 @@ function makeLevel()
 function makePlayer()
 {
     player = game.add.sprite(32, game.world.height - 150, 'dude');
-
     //  We need to enable physics on the player
     game.physics.arcade.enable(player);
 
@@ -247,7 +258,7 @@ function makeStars()
 
 function makeEnemies()
 {
-    enemies.push(game.add.sprite(500, game.world.height - 200, 'baddie'));
+    enemies.push(game.add.sprite(500, game.world.height - 150, 'baddie'));
     enemies.push(game.add.sprite(game.world.width - 36, game.world.height - 400, 'baddie'));
     enemies.push(game.add.sprite(32, game.world.height - 600, 'baddie'));
 
@@ -293,5 +304,26 @@ function collitions()
 
 function throwLife()
 {
-    alert('Game Over?');
+    player.life--;
+    for(var i = 0; i < enemies.length; i++)
+    {
+        enemies[i].kill();
+    }
+    enemies = [];
+    makeEnemies();
+    player.x = 32;
+    player.y = game.world.height - 150;
+}
+
+function gameOver()
+{
+    music.stop();
+    back = game.add.sprite(0, 0, 'sky');
+    game.add.text(300, 250, 'Game Over!', { fontSize: '32px', fill: '#000' });
+    game.add.text(330, 300, 'Score: ' + score, { fontSize: '32px', fill: '#000' });
+    game.add.text(200, 350, 'Game will restart in less than 3 seconds', { fontSize: '20px', fill: '#000' });
+
+    setTimeout(function(){
+        window.location.reload(1);
+     }, 3000);
 }
