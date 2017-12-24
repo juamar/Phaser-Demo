@@ -7,7 +7,7 @@ Nos falta:
     *linea 111-Ok
     *Reestructurar un poco el codigo (que no esté todo en index.html)-Ok
     *cambiar bounce de estrellas-Ok
-    *Poner bichos malos-
+    *Poner bichos malos-Ok
     *Vidas-
     *Fin de nivel-
 **/
@@ -15,12 +15,15 @@ var score = 0;
 var scoreText;
 var game = new Phaser.Game(800, 600, Phaser.AUTO, 'canvas', { preload: preload, create: create, update: update });
 var loadText;
+var playerHitPlatform;
+var enemies = [];
 
 function preload() {
     game.load.image('sky', 'assets/sky.png');
     game.load.image('ground', 'assets/platform.png');
     game.load.image('star', 'assets/star.png');
     game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+    game.load.spritesheet('baddie', 'assets/baddie.png', 32, 32);
     game.load.audio('jesus', ['assets/Jesus_He_Knows_Me_Genesis.ogg', 'assets/Genesis_Jesus_He_Knows_Me.mp3']);
 
 }
@@ -33,63 +36,16 @@ function create() {
     //  A simple background for our game
     game.add.sprite(0, 0, 'sky');
 
-    //  The platforms group contains the ground and the 2 ledges we can jump on
-    platforms = game.add.group();
-
-    //  We will enable physics for any object that is created in this group
-    platforms.enableBody = true;
-
-    // Here we create the ground.
-    var ground = platforms.create(0, game.world.height - 64, 'ground');
-
-    //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
-    ground.scale.setTo(2, 2);
-
-    //  This stops it from falling away when you jump on it
-    ground.body.immovable = true;
-
-    //  Now let's create two ledges
-    var ledge = platforms.create(400, 400, 'ground');
-
-    ledge.body.immovable = true;
-
-    ledge = platforms.create(-150, 250, 'ground');
-
-    //comment to make ledge fall when collisioning it
-    ledge.body.immovable = true;
+    //Ground and ledges
+    makeLevel();
 
     // The player and its settings
-    player = game.add.sprite(32, game.world.height - 150, 'dude');
-
-    //  We need to enable physics on the player
-    game.physics.arcade.enable(player);
-
-    //  Player physics properties. Give the little guy a slight bounce.
-    player.body.bounce.y = 0.2;
-    player.body.gravity.y = 300;
-    player.body.collideWorldBounds = true;
-
-    //  Our two animations, walking left and right.
-    player.animations.add('left', [0, 1, 2, 3], 10, true);
-    player.animations.add('right', [5, 6, 7, 8], 10, true);
+    makePlayer();
 
     //stars
-    stars = game.add.group();
+    makeStars();
 
-    stars.enableBody = true;
-
-    //  Here we'll create 12 of them evenly spaced apart
-    for (var i = 0; i < 12; i++)
-    {
-        //  Create a star inside of the 'stars' group
-        var star = stars.create(i * 70, 0, 'star');
-
-        //  Let gravity do its thing
-        star.body.gravity.y = 300;
-
-        //  This just gives each star a slightly random bounce value
-        star.body.bounce.y = 0.7 + Math.random() * 0.2;
-    }
+    makeEnemies();
 
     //score
     scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
@@ -97,8 +53,6 @@ function create() {
     //  A simple background for our game
     back = game.add.sprite(0, 0, 'sky');
     loadText = game.add.text(340, 300, 'Loading', { fontSize: '32px', fill: '#000' });
-
-    //mouseDown = game.add.text(340, 10, 'false', { fontSize: '20px', fill: '#000' });
 
     music = game.add.audio('jesus');
 
@@ -115,21 +69,12 @@ function start()
 
 function update() {
 
-    //  Collide the player and the stars with the platforms
-    var hitPlatform = game.physics.arcade.collide(player, platforms);
-    game.physics.arcade.collide(stars, platforms);
-
-    //¿que son los dos ultimos valores?
-    //El cuarto parametro es para hacer una comprobacion antes de ejecutar collect (o lo que sea).
-    //El quinto es el contexto en el cual corren los callbacks.
-    game.physics.arcade.overlap(player, stars, collectStar, null, this);
+    collitions();
 
     cursors = game.input.keyboard.createCursorKeys();
 
     //  Reset the players velocity (movement)
     player.body.velocity.x = 0;
-
-    //mouseDown.text = game.input.mousePointer.isDown;
 
     var isDown = game.input.activePointer.isDown;
     var x = game.input.activePointer.x;
@@ -157,10 +102,51 @@ function update() {
     }
 
     //  Allow the player to jump if they are touching the ground.
-    if ((cursors.up.isDown || (y < up  && isDown)) && player.body.touching.down && hitPlatform)
+    if ((cursors.up.isDown || (y < up  && isDown)) && player.body.touching.down && playerHitPlatform)
     {
         jump();
     }
+
+    for (var i = 0; i < enemies.length; i++)
+    {
+        if ( (enemies[i].x < 1 && enemies[i].goRight == false) || (enemies[i].x > game.world.width - 35 && enemies[i].goRight == true) )
+        {
+            enemies[i].goRight = !enemies[i].goRight;
+        }
+    }
+    if (!enemies[0].goRight)
+    {
+        enemies[0].body.velocity.x = -50;
+        enemies[0].animations.play('left');
+    }
+    else
+    {
+        enemies[0].body.velocity.x = 50;
+        enemies[0].animations.play('right');
+    }
+
+    if (!enemies[1].goRight)
+    {
+        enemies[1].body.velocity.x = -50;
+        enemies[1].animations.play('left');
+    }
+    else
+    {
+        enemies[1].body.velocity.x = 50;
+        enemies[1].animations.play('right');
+    }
+
+    if (enemies[2].goRight)
+    {
+        enemies[2].body.velocity.x = 50;
+        enemies[2].animations.play('right');
+    }
+    else
+    {
+        enemies[2].body.velocity.x = -50;
+        enemies[2].animations.play('left');
+    }
+
 }
 
 function moveLeft()
@@ -191,4 +177,121 @@ function collectStar (player, star) {
     score += 10;
     scoreText.text = 'Score: ' + score;
 
+}
+
+function makeLevel()
+{
+    //  The platforms group contains the ground and the 2 ledges we can jump on
+    platforms = game.add.group();
+
+    //  We will enable physics for any object that is created in this group
+    platforms.enableBody = true;
+
+    // Here we create the ground.
+    var ground = platforms.create(0, game.world.height - 64, 'ground');
+
+    //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
+    ground.scale.setTo(2, 2);
+
+    //  This stops it from falling away when you jump on it
+    ground.body.immovable = true;
+
+    //  Now let's create two ledges
+    var ledge = platforms.create(400, 400, 'ground');
+
+    ledge.body.immovable = true;
+
+    ledge = platforms.create(-150, 250, 'ground');
+
+    //comment to make ledge fall when collisioning it
+    ledge.body.immovable = true;
+}
+
+function makePlayer()
+{
+    player = game.add.sprite(32, game.world.height - 150, 'dude');
+
+    //  We need to enable physics on the player
+    game.physics.arcade.enable(player);
+
+    //  Player physics properties. Give the little guy a slight bounce.
+    player.body.bounce.y = 0.2;
+    player.body.gravity.y = 300;
+    player.body.collideWorldBounds = true;
+
+    //  Our two animations, walking left and right.
+    player.animations.add('left', [0, 1, 2, 3], 10, true);
+    player.animations.add('right', [5, 6, 7, 8], 10, true);
+    player.life = 3;
+}
+
+function makeStars()
+{
+    stars = game.add.group();
+
+    stars.enableBody = true;
+
+    //  Here we'll create 12 of them evenly spaced apart
+    for (var i = 0; i < 12; i++)
+    {
+        //  Create a star inside of the 'stars' group
+        var star = stars.create(i * 70, 0, 'star');
+
+        //  Let gravity do its thing
+        star.body.gravity.y = 300;
+
+        //  This just gives each star a slightly random bounce value
+        star.body.bounce.y = 0.7 + Math.random() * 0.2;
+    }
+}
+
+function makeEnemies()
+{
+    enemies.push(game.add.sprite(500, game.world.height - 200, 'baddie'));
+    enemies.push(game.add.sprite(game.world.width - 36, game.world.height - 400, 'baddie'));
+    enemies.push(game.add.sprite(32, game.world.height - 600, 'baddie'));
+
+    //  We need to enable physics on the player
+    for (var i = 0; i < enemies.length; i++)
+    {
+        game.physics.arcade.enable(enemies[i]);
+        
+        enemies[i].body.bounce.y = 0.2;
+        enemies[i].body.gravity.y = 300;
+        enemies[i].body.collideWorldBounds = true;
+
+        //  Our two animations, walking left and right.
+        enemies[i].animations.add('left', [0, 1], 10, true);
+        enemies[i].animations.add('right', [2, 3], 10, true);
+    }
+
+    enemies[0].body.velocity.x = -50;
+    enemies[0].goRight = false;
+    enemies[1].body.velocity.x = -50;
+    enemies[1].goRight = false;
+    enemies[2].body.velocity.x = 50;
+    enemies[2].goRight = true;
+
+}
+
+function collitions()
+{
+    //  Collide the player and the stars with the platforms
+    playerHitPlatform = game.physics.arcade.collide(player, platforms);
+    game.physics.arcade.collide(stars, platforms);
+
+    //¿que son los dos ultimos valores?
+    //El cuarto parametro es para hacer una comprobacion antes de ejecutar collect (o lo que sea).
+    //El quinto es el contexto en el cual corren los callbacks.
+    game.physics.arcade.overlap(player, stars, collectStar, null, this);
+    for (var i = 0; i < enemies.length; i++)
+    {
+        game.physics.arcade.overlap(player, enemies[i], throwLife, null, this);
+        game.physics.arcade.collide(enemies[i],platforms);
+    }
+}
+
+function throwLife()
+{
+    alert('Game Over?');
 }
