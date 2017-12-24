@@ -6,7 +6,7 @@ Nos falta:
     *Poner game en un canvas definido y un h1 a la página (para probar... no porque aporte algo)-Ok
     *linea 111-Ok
     *Reestructurar un poco el codigo (que no esté todo en index.html)-Ok
-    *cambiar bounce de estrellas-
+    *cambiar bounce de estrellas-Ok
     *Poner bichos malos-
     *Vidas-
     *Fin de nivel-
@@ -85,9 +85,8 @@ function create() {
         var star = stars.create(i * 70, 0, 'star');
 
         //  Let gravity do its thing
-        star.body.gravity.y = 6;
+        star.body.gravity.y = 300;
 
-        // ¿Y si hacemos el bote diferente en relacion al peso?
         //  This just gives each star a slightly random bounce value
         star.body.bounce.y = 0.7 + Math.random() * 0.2;
     }
@@ -130,7 +129,7 @@ function update() {
     //  Reset the players velocity (movement)
     player.body.velocity.x = 0;
 
-    mouseDown.text = game.input.mousePointer.isDown;
+    //mouseDown.text = game.input.mousePointer.isDown;
 
     var isDown = game.input.activePointer.isDown;
     var x = game.input.activePointer.x;
