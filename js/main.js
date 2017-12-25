@@ -8,9 +8,12 @@ Nos falta:
     *Reestructurar un poco el codigo (que no esté todo en index.html)-Ok
     *cambiar bounce de estrellas-Ok
     *Poner bichos malos-Ok
-    *Vidas-
-    *Game Over! - Ok
-    *Fin de nivel-
+    *Vidas-Ok
+    *Game Over!- Ok
+    *Fin de nivel-Ok
+
+    DONE!!!!!
+    MARRY Christmas!!!
 **/
 var score = 0;
 var scoreText;
@@ -18,6 +21,8 @@ var game = new Phaser.Game(800, 600, Phaser.AUTO, 'canvas', { preload: preload, 
 var loadText;
 var playerHitPlatform;
 var enemies = [];
+var lifeDrawings = []; 
+var wonDone = false;
 
 function preload() {
     game.load.image('sky', 'assets/sky.png');
@@ -42,6 +47,8 @@ function create() {
 
     // The player and its settings
     makePlayer();
+
+    drawLife();
 
     //stars
     makeStars();
@@ -70,14 +77,29 @@ function start()
 
 function update() {
 
-    if (player.life > 0)
+    if (player.life < 1)
     {      
-        collitions();
-        play();
+        gameOver();
+    }
+    else
+    if (score >= 120)
+    {
+        won();
     }
     else
     {
-        gameOver();
+        collitions();
+        play();
+    }
+    
+}
+
+function drawLife()
+{
+    for (var i = 0; i < player.life; i++)
+    {
+        lifeDrawings.push(game.add.sprite(12 + 40*i, 50, 'dude'));
+        lifeDrawings[i].frame = 4;
     }
     
 }
@@ -305,6 +327,7 @@ function collitions()
 function throwLife()
 {
     player.life--;
+    lifeDrawings[player.life].kill();
     for(var i = 0; i < enemies.length; i++)
     {
         enemies[i].kill();
@@ -315,12 +338,24 @@ function throwLife()
     player.y = game.world.height - 150;
 }
 
+function won()
+{
+    game.add.sprite(0, 0, 'sky');
+    game.add.text(300, 250, 'You Win!!!!', { fontSize: '32px', fill: '#000' });
+    game.add.text(310, 300, 'Score: ' + score, { fontSize: '32px', fill: '#000' });
+    game.add.text(200, 350, 'Game will restart in less than 3 seconds', { fontSize: '20px', fill: '#000' });
+
+    setTimeout(function(){
+        window.location.reload(1);
+     }, 3000);
+}
+
 function gameOver()
 {
     music.stop();
-    back = game.add.sprite(0, 0, 'sky');
+    game.add.sprite(0, 0, 'sky');
     game.add.text(300, 250, 'Game Over!', { fontSize: '32px', fill: '#000' });
-    game.add.text(330, 300, 'Score: ' + score, { fontSize: '32px', fill: '#000' });
+    game.add.text(310, 300, 'Score: ' + score, { fontSize: '32px', fill: '#000' });
     game.add.text(200, 350, 'Game will restart in less than 3 seconds', { fontSize: '20px', fill: '#000' });
 
     setTimeout(function(){
